@@ -1,0 +1,10 @@
+fmod GRAMMATTR is
+   inc QID .
+   sorts Expression Term Factor .
+   op _+_ : Expression Term -> Expression .     --- E -> E + T
+   subsort Term < Expression .                  --- E -> T
+   op _*_ : Term Factor -> Term .               --- T -> T * F
+   subsort Factor < Term .                      --- T -> F
+   op (_) : Expression -> Factor .              --- F -> (E)
+   subsort Qid < Factor .                       --- F -> digit
+endfm

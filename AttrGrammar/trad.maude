@@ -1,0 +1,180 @@
+--- Bhaskara
+fmod PAIR{X :: TRIV, Y :: TRIV} is
+     sort Pair{X, Y} .
+     op (_,_) : X$Elt Y$Elt -> Pair{X, Y} .
+endfm
+
+fmod BHASKARA is
+   inc PAIR{Float, Float} .
+   inc FLOAT .
+   op bhaskara : Float Float Float -> Pair{Float, Float} .
+   vars a b c : Float .
+   eq bhaskara(a, b, c) = ((- b + sqrt(b ^ 2.0 - 4.0 * a * c)) / 2.0 * a, 
+                             (- b - sqrt(b ^ 2.0 - 4.0 * a * c)) / 2.0 * a) .
+endfm
+ 
+***(
+   execucoes
+ 
+   reduce in BHASKARA : bhaskara(2.0,4.0,1.0) .
+ 
+)
+ 
+--- Lista de numeros naturais
+fmod LISTA-NAT is
+   inc NAT .
+   sort Lista{Nat} .
+   subsort Nat < Lista{Nat} .
+   op nula : -> Lista{Nat} [ctor] .
+   op lista : Nat Lista{Nat} -> Lista{Nat} [ctor] .
+   op comp : Lista{Nat} -> Nat .
+   var N : Nat . var L : Lista{Nat} .
+   eq comp(nula) = 0 .
+   eq comp(lista(N, L)) = 1 + comp(L) .
+endfm
+ 
+***(
+   execucoes
+ 
+   reduce in LISTA-NAT : nula .
+   reduce in LISTA-NAT : lista(1, nula) .
+   reduce in LISTA-NAT : lista (23, lista(1, nula)) .
+   reduce in LISTA-NAT : lista(N:Nat, L:Lista{Nat}) .
+   reduce in LISTA-NAT : comp(lista(23, lista(1, nula))) .
+)
+ 
+--- Expressao gramatica
+fmod ID is
+   inc QID .
+   sort Id .
+   op id : Qid -> Id .
+endfm
+
+fmod EXPR-GRM is
+   inc ID .
+   sorts Expr Term Factor .
+   subsort Term < Expr .
+   subsort Factor < Term .
+   subsort Id < Factor .
+   op _+_ : Expr Term -> Expr .
+   op _*_ : Term Factor -> Term .
+   op [_] : Expr -> Factor .
+endfm
+ 
+fmod EXPR-GRM0 is
+   inc ID .
+   sort Expr .
+   subsort Id < Expr .
+   op _+_ : Expr Expr -> Expr [assoc prec 20] .
+   op _*_ : Expr Expr -> Expr [assoc prec 10] .
+endfm
+--- Menor valor de precedencia vai primeiro
+ 
+***(
+   set print mixfix off .
+   parse in EXPR-GRM0 : ( id('a) + id('b) ) * id('c) .
+   parse in EXPR-GRM0 : id('a) + id('b) * id('c) .
+)
+ 
+fmod DIG is
+   inc RAT .
+   sort Dig .
+   op dig : Rat -> Dig .
+endfm
+ 
+fmod EXPR-GRM1 is
+   inc DIG .
+   sort Expr .
+   subsort Dig < Expr .
+   ops _+_ _-_ : Expr Expr -> Expr [assoc prec 20] .
+   ops _*_ _/_ : Expr Expr -> Expr [assoc prec 10] .
+endfm
+ 
+***(
+   set print mixfix off .
+   parse in EXPR-GRM1 : dig(2) + dig(3/4) * dig(5) .
+   parse in EXPR-GRM1 : dig(2) + dig(4) .
+)
+ 
+fmod STACK-MACHINE-GRAMMAR is
+   inc RAT .
+   sort Prog Cmd Arith .
+   subsort Arith < Cmd < Prog .
+   op push : Rat -> Cmd .
+   ops skip pop : -> Cmd .
+   ops add sub mul div : -> Arith .
+   op _;_ : Prog Prog -> Prog [assoc] .
+endfm
+ 
+***(
+   parse in STACK-MACHINE-GRAMMAR : push(1) ; push(2); add .
+)
+ 
+fmod EXPR-STACK is
+   inc EXPR-GRM1 .
+   inc STACK-MACHINE-GRAMMAR .
+   op compile : Expr -> Prog .
+   var R : Rat . vars E1 E2 : Expr .
+   eq compile(dig(R)) = push(R) .
+   eq compile(E1 + E2) = compile(E1) ; compile(E2) ; add .
+   eq compile(E1 - E2) = compile(E1) ; compile(E2) ; sub .
+   eq compile(E1 * E2) = compile(E1) ; compile(E2) ; mul .
+   eq compile(E1 / E2) = compile(E1) ; compile(E2) ; mul .
+endfm
+ 
+***(
+   reduce in EXPR-STACK : compile(dig(2) + dig(3/4) * dig(5)) .
+)
+ 
+fmod STACK is
+   inc RAT .
+   sort Stack{Rat} .
+   subsort Rat < Stack{Rat} .
+   op Ø : -> Stack{Rat} .
+   op _::_ : Stack{Rat} Stack{Rat} -> Stack{Rat} [id: Ø assoc] .
+endfm
+ 
+fmod STACK-MACHINE-INTERPRETER is
+   inc STACK-MACHINE-GRAMMAR .
+   inc STACK .
+   op run : Prog Stack{Rat} -> Stack{Rat} .
+   vars P P1 P2 : Prog . vars R R1 R2 : Rat . var S : Stack{Rat} .
+   eq run(push(R), S) = R :: S .
+   eq run(pop, R :: S) = S .
+   eq run(add, R2 :: R1 :: S) = (R1 + R2) :: S .
+   eq run(sub, R2 :: R1 :: S) = (R1 - R2) :: S .
+   eq run(mul, R2 :: R1 :: S) = (R1 * R2) :: S .
+   eq run(div, R2 :: R1 :: S) = (R1 / R2) :: S .
+   eq run(P1 ; P2, S) = run(P2, run(P1, S)) .
+endfm
+ 
+***(
+   reduce in STACK-MACHINE-INTERPRETER : run(push(2) ; push(3/4) ; push(5) ; mul ; add, Ø) .
+)
+ 
+fmod EXPR-INTERPRETER is
+   inc EXPR-STACK .
+   inc STACK-MACHINE-INTERPRETER .
+   op run : Expr -> Rat .
+   var E : Expr .
+   eq run(E) = run(compile(E), Ø) .
+endfm
+ 
+***(
+   reduce in EXPR-INTERPRETER : run(dig(2) + dig(3/4) * dig(5)) .
+)
+
+reduce in BHASKARA : bhaskara(2.0,4.0,1.0) .
+reduce in LISTA-NAT : nula .
+reduce in LISTA-NAT : lista(1, nula) .
+reduce in LISTA-NAT : lista (23, lista(1, nula)) .
+reduce in LISTA-NAT : lista(N:Nat, L:Lista{Nat}) .
+reduce in LISTA-NAT : comp(lista(23, lista(1, nula))) .
+set print mixfix off .
+parse in EXPR-GRM0 : ( id('a) + id('b) ) * id('c) .
+parse in EXPR-GRM0 : id('a) + id('b) * id('c) .
+parse in EXPR-GRM1 : dig(2) + dig(3/4) * dig(5) .
+parse in EXPR-GRM1 : dig(2) + dig(4) .
+parse in STACK-MACHINE-GRAMMAR : push(1) ; push(2); add .
+reduce in EXPR-STACK : compile(dig(2) + dig(3/4) * dig(5)) .
+reduce in EXPR-INTERPRETER : run(dig(2) + dig(3/4) * dig(5)) .

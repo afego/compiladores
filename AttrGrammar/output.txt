@@ -1,0 +1,44 @@
+		     \||||||||||||||||||/
+		   --- Welcome to Maude ---
+		     /||||||||||||||||||\
+	     Maude 3.1 built: Oct 12 2020 20:12:31
+	     Copyright 1997-2020 SRI International
+		   Mon Dec 13 18:14:07 2021
+==========================================
+reduce in BHASKARA : bhaskara(2.0, 4.0, 1.0) .
+rewrites: 13 in 0ms cpu (0ms real) (~ rewrites/second)
+result Pair{Float,Float}: -1.1715728752538097,-6.8284271247461898
+==========================================
+reduce in LISTA-NAT : nula .
+rewrites: 0 in 0ms cpu (0ms real) (~ rewrites/second)
+result Lista{Nat}: nula
+==========================================
+reduce in LISTA-NAT : lista(1, nula) .
+rewrites: 0 in 0ms cpu (0ms real) (~ rewrites/second)
+result Lista{Nat}: lista(1, nula)
+==========================================
+reduce in LISTA-NAT : lista(23, lista(1, nula)) .
+rewrites: 0 in 0ms cpu (0ms real) (~ rewrites/second)
+result Lista{Nat}: lista(23, lista(1, nula))
+==========================================
+reduce in LISTA-NAT : lista(N, L) .
+rewrites: 0 in 0ms cpu (0ms real) (~ rewrites/second)
+result Lista{Nat}: lista(N, L)
+==========================================
+reduce in LISTA-NAT : comp(lista(23, lista(1, nula))) .
+rewrites: 5 in 0ms cpu (0ms real) (~ rewrites/second)
+result NzNat: 2
+Expr: _*_(_+_(id('a), id('b)), id('c))
+Expr: _+_(id('a), _*_(id('b), id('c)))
+Expr: _+_(dig(2), _*_(dig(3/4), dig(5)))
+Expr: _+_(dig(2), dig(4))
+Prog: _;_(push(1), _;_(push(2), add))
+==========================================
+reduce in EXPR-STACK : compile(_+_(dig(2), _*_(dig(3/4), dig(5)))) .
+rewrites: 5 in 0ms cpu (0ms real) (~ rewrites/second)
+result Prog: _;_(push(2), push(3/4), push(5), mul, add)
+==========================================
+reduce in EXPR-INTERPRETER : run(_+_(dig(2), _*_(dig(3/4), dig(5)))) .
+rewrites: 20 in 0ms cpu (0ms real) (~ rewrites/second)
+result PosRat: 23/4
+Bye.
