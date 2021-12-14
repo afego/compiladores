@@ -3,10 +3,14 @@
 		     /||||||||||||||||||\
 	     Maude 3.1 built: Oct 12 2020 20:12:31
 	     Copyright 1997-2020 SRI International
-		   Mon Dec 13 18:14:07 2021
+		   Tue Dec 14 11:44:37 2021
 ==========================================
 reduce in BHASKARA : bhaskara(2.0, 4.0, 1.0) .
 rewrites: 13 in 0ms cpu (0ms real) (~ rewrites/second)
+result Pair{Float,Float}: -1.1715728752538097,-6.8284271247461898
+==========================================
+reduce in BHASKARA2 : bhaskara(2.0, 4.0, 1.0) .
+rewrites: 14 in 0ms cpu (0ms real) (~ rewrites/second)
 result Pair{Float,Float}: -1.1715728752538097,-6.8284271247461898
 ==========================================
 reduce in LISTA-NAT : nula .
@@ -38,7 +42,221 @@ reduce in EXPR-STACK : compile(_+_(dig(2), _*_(dig(3/4), dig(5)))) .
 rewrites: 5 in 0ms cpu (0ms real) (~ rewrites/second)
 result Prog: _;_(push(2), push(3/4), push(5), mul, add)
 ==========================================
+reduce in EXPR-STACK : compile(_+_(dig(2), _*_(dig(3/4), dig(5)))) .
+==========================================
+reduce in EXPR-STACK : compile(dig(2) + dig(3/4) * dig(5)) .
+Debug(1)> step .
+*********** equation
+eq compile(_+_(E1, E2)) = _;_(compile(E1), _;_(compile(E2), add)) .
+E1 --> dig(2)
+E2 --> _*_(dig(3/4), dig(5))
+compile(_+_(dig(2), _*_(dig(3/4), dig(5))))
+--->
+_;_(compile(dig(2)), _;_(compile(_*_(dig(3/4), dig(5))), add))
+Debug(1)> step .
+*********** equation
+eq compile(dig(R)) = push(R) .
+R --> 2
+compile(dig(2))
+--->
+push(2)
+Debug(1)> step .
+*********** equation
+eq compile(_*_(E1, E2)) = _;_(compile(E1), _;_(compile(E2), mul)) .
+E1 --> dig(3/4)
+E2 --> dig(5)
+compile(_*_(dig(3/4), dig(5)))
+--->
+_;_(compile(dig(3/4)), _;_(compile(dig(5)), mul))
+Debug(1)> step .
+*********** equation
+eq compile(dig(R)) = push(R) .
+R --> 3/4
+compile(dig(3/4))
+--->
+push(3/4)
+Debug(1)> step .
+*********** equation
+eq compile(dig(R)) = push(R) .
+R --> 5
+compile(dig(5))
+--->
+push(5)
+rewrites: 5 in 0ms cpu (7576ms real) (~ rewrites/second)
+result Prog: _;_(push(2), push(3/4), push(5), mul, add)
+==========================================
 reduce in EXPR-INTERPRETER : run(_+_(dig(2), _*_(dig(3/4), dig(5)))) .
 rewrites: 20 in 0ms cpu (0ms real) (~ rewrites/second)
+result PosRat: 23/4
+==========================================
+reduce in EXPR-INTERPRETER : run(_+_(dig(2), _*_(dig(3/4), dig(5)))) .
+Debug(1)> step .
+*********** equation
+eq run(E) = run(compile(E), Ø) .
+E --> _+_(dig(2), _*_(dig(3/4), dig(5)))
+run(_+_(dig(2), _*_(dig(3/4), dig(5))))
+--->
+run(compile(_+_(dig(2), _*_(dig(3/4), dig(5)))), Ø)
+Debug(1)> step .
+*********** equation
+eq compile(_+_(E1:Expr, E2:Expr)) = _;_(compile(E1:Expr), _;_(compile(
+    E2:Expr), add)) .
+E1:Expr --> dig(2)
+E2:Expr --> _*_(dig(3/4), dig(5))
+compile(_+_(dig(2), _*_(dig(3/4), dig(5))))
+--->
+_;_(compile(dig(2)), _;_(compile(_*_(dig(3/4), dig(5))), add))
+Debug(1)> step .
+*********** equation
+eq compile(dig(R:Rat)) = push(R:Rat) .
+R:Rat --> 2
+compile(dig(2))
+--->
+push(2)
+Debug(1)> step .
+*********** equation
+eq compile(_*_(E1:Expr, E2:Expr)) = _;_(compile(E1:Expr), _;_(compile(
+    E2:Expr), mul)) .
+E1:Expr --> dig(3/4)
+E2:Expr --> dig(5)
+compile(_*_(dig(3/4), dig(5)))
+--->
+_;_(compile(dig(3/4)), _;_(compile(dig(5)), mul))
+Debug(1)> step .
+*********** equation
+eq compile(dig(R:Rat)) = push(R:Rat) .
+R:Rat --> 3/4
+compile(dig(3/4))
+--->
+push(3/4)
+Debug(1)> step .
+*********** equation
+eq compile(dig(R:Rat)) = push(R:Rat) .
+R:Rat --> 5
+compile(dig(5))
+--->
+push(5)
+Debug(1)> step .
+*********** equation
+eq run(_;_(P1:Prog, P2:Prog), S:Stack{Rat}) = run(P2:Prog, run(P1:Prog,
+    S:Stack{Rat})) .
+P1:Prog --> push(2)
+P2:Prog --> _;_(push(3/4), push(5), mul, add)
+S:Stack{Rat} --> Ø
+run(_;_(push(2), push(3/4), push(5), mul, add), Ø)
+--->
+run(_;_(push(3/4), push(5), mul, add), run(push(2), Ø))
+Debug(1)> step .
+*********** equation
+eq run(push(R:Rat), S:Stack{Rat}) = _::_(R:Rat, S:Stack{Rat}) .
+R:Rat --> 2
+S:Stack{Rat} --> Ø
+run(push(2), Ø)
+--->
+_::_(2, Ø)
+Debug(1)> step .
+*********** equation
+eq run(_;_(P1:Prog, P2:Prog), S:Stack{Rat}) = run(P2:Prog, run(P1:Prog,
+    S:Stack{Rat})) .
+P1:Prog --> push(3/4)
+P2:Prog --> _;_(push(5), mul, add)
+S:Stack{Rat} --> 2
+run(_;_(push(3/4), push(5), mul, add), 2)
+--->
+run(_;_(push(5), mul, add), run(push(3/4), 2))
+Debug(1)> step .
+*********** equation
+eq run(push(R:Rat), S:Stack{Rat}) = _::_(R:Rat, S:Stack{Rat}) .
+R:Rat --> 3/4
+S:Stack{Rat} --> 2
+run(push(3/4), 2)
+--->
+_::_(3/4, 2)
+Debug(1)> step .
+*********** equation
+eq run(_;_(P1:Prog, P2:Prog), S:Stack{Rat}) = run(P2:Prog, run(P1:Prog,
+    S:Stack{Rat})) .
+P1:Prog --> push(5)
+P2:Prog --> _;_(mul, add)
+S:Stack{Rat} --> _::_(3/4, 2)
+run(_;_(push(5), mul, add), _::_(3/4, 2))
+--->
+run(_;_(mul, add), run(push(5), _::_(3/4, 2)))
+Debug(1)> step .
+*********** equation
+eq run(push(R:Rat), S:Stack{Rat}) = _::_(R:Rat, S:Stack{Rat}) .
+R:Rat --> 5
+S:Stack{Rat} --> _::_(3/4, 2)
+run(push(5), _::_(3/4, 2))
+--->
+_::_(5, _::_(3/4, 2))
+Debug(1)> step .
+*********** equation
+eq run(_;_(P1:Prog, P2:Prog), S:Stack{Rat}) = run(P2:Prog, run(P1:Prog,
+    S:Stack{Rat})) .
+P1:Prog --> mul
+P2:Prog --> add
+S:Stack{Rat} --> _::_(5, 3/4, 2)
+run(_;_(mul, add), _::_(5, 3/4, 2))
+--->
+run(add, run(mul, _::_(5, 3/4, 2)))
+Debug(1)> step .
+*********** equation
+eq run(mul, _::_(R2:Rat, R1:Rat, S:Stack{Rat})) = _::_(_*_(R1:Rat, R2:Rat),
+    S:Stack{Rat}) .
+R2:Rat --> 5
+R1:Rat --> 3/4
+S:Stack{Rat} --> 2
+run(mul, _::_(5, 3/4, 2))
+--->
+_::_(_*_(3/4, 5), 2)
+Debug(1)> step .
+*********** equation
+eq _*_(K:Int, _/_(I:NzInt, N:NzNat)) = _/_(_*_(I:NzInt, K:Int), N:NzNat) .
+K:Int --> 5
+I:NzInt --> 3
+N:NzNat --> 4
+_*_(5, 3/4)
+--->
+_/_(_*_(3, 5), 4)
+Debug(1)> step .
+*********** equation
+(built-in equation for symbol _*_)
+_*_(3, 5)
+--->
+15
+Debug(1)> step .
+*********** equation
+eq run(add, _::_(R2:Rat, R1:Rat, S:Stack{Rat})) = _::_(_+_(R1:Rat, R2:Rat),
+    S:Stack{Rat}) .
+R2:Rat --> 15/4
+R1:Rat --> 2
+S:Stack{Rat} --> Ø
+run(add, _::_(15/4, 2))
+--->
+_::_(_+_(2, 15/4), Ø)
+Debug(1)> step .
+*********** equation
+eq _+_(K:Int, _/_(I:NzInt, N:NzNat)) = _/_(_+_(I:NzInt, _*_(N:NzNat, K:Int)),
+    N:NzNat) .
+K:Int --> 2
+I:NzInt --> 15
+N:NzNat --> 4
+_+_(2, 15/4)
+--->
+_/_(_+_(15, _*_(4, 2)), 4)
+Debug(1)> step .
+*********** equation
+(built-in equation for symbol _*_)
+_*_(2, 4)
+--->
+8
+Debug(1)> step .
+*********** equation
+(built-in equation for symbol _+_)
+_+_(8, 15)
+--->
+23
+rewrites: 20 in 0ms cpu (17271ms real) (~ rewrites/second)
 result PosRat: 23/4
 Bye.

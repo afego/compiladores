@@ -12,12 +12,29 @@ fmod BHASKARA is
    eq bhaskara(a, b, c) = ((- b + sqrt(b ^ 2.0 - 4.0 * a * c)) / 2.0 * a, 
                              (- b - sqrt(b ^ 2.0 - 4.0 * a * c)) / 2.0 * a) .
 endfm
- 
+
+fmod DISCRIMINANT is
+   inc FLOAT .
+   op discriminant : Float Float Float -> Float .
+   vars a b c : Float .
+   eq discriminant(a, b, c) = b ^ 2.0 - 4.0 * a * c .
+endfm
+
+fmod BHASKARA2 is
+   inc PAIR{Float, Float} .
+   inc DISCRIMINANT .
+   inc FLOAT .
+   op bhaskara : Float Float Float -> Pair{Float, Float} .
+   vars a b c : Float .
+   eq bhaskara(a, b, c) = ((- b + sqrt(discriminant(a, b, c))) / 2.0 * a, 
+                            (- b - sqrt(discriminant(a, b, c))) / 2.0 * a) . 
+endfm
+
 ***(
    execucoes
  
    reduce in BHASKARA : bhaskara(2.0,4.0,1.0) .
- 
+   reduce in BHASKARA2 : bhaskara(2.0,4.0,1.0) .
 )
  
 --- Lista de numeros naturais
@@ -165,6 +182,7 @@ endfm
 )
 
 reduce in BHASKARA : bhaskara(2.0,4.0,1.0) .
+reduce in BHASKARA2 : bhaskara(2.0,4.0,1.0) .
 reduce in LISTA-NAT : nula .
 reduce in LISTA-NAT : lista(1, nula) .
 reduce in LISTA-NAT : lista (23, lista(1, nula)) .
@@ -177,4 +195,6 @@ parse in EXPR-GRM1 : dig(2) + dig(3/4) * dig(5) .
 parse in EXPR-GRM1 : dig(2) + dig(4) .
 parse in STACK-MACHINE-GRAMMAR : push(1) ; push(2); add .
 reduce in EXPR-STACK : compile(dig(2) + dig(3/4) * dig(5)) .
+debug reduce in EXPR-STACK : compile(dig(2) + dig(3/4) * dig(5)) .
 reduce in EXPR-INTERPRETER : run(dig(2) + dig(3/4) * dig(5)) .
+debug reduce in EXPR-INTERPRETER : run(dig(2) + dig(3/4) * dig(5)) .
